@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src='vue.js'></script>
+<link rel="stylesheet" href="openlayers/ol.css"/>
+<script type="text/javascript" src="openlayers/ol.js"></script>
+<style>
+     .map {
+        width: 100%;
+        height:500px;
+      }
+</style>
+<title>Accessibl_Map</title>
+</head>
+<body>
+<div id="app">
+    <div style="text-align: center;">{{Name}}</div>
+    <div id="map" class="map" tabindex="0"></div>
+</div>
+   <script>
+       //阻止vue在启动时生成出产提示。
+       Vue.config.productionTip=false
+       const app=new Vue({
+           el:'#app',
+           data:{
+               Name:'Accessibl_Map'
+        
+           },
+           methods:{
+               begin: function(){
+                   console.log('hello');
+               }
+              
+              
+           },
+           mounted(){
+                const map = new ol.Map({
+                    layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM(),
+                    }),
+                    ],
+                    target: 'map',
+                    view: new ol.View({
+                        center: [0, 0],
+                        zoom: 2,
+                    }),
+                });
+                this.begin();
+                
+               
+
+           }
+          
+
+       })    
+      
+   </script>
+</body>
+</html>
