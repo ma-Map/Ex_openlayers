@@ -1,2 +1,3 @@
 # Ex_openlayers
 结合vue实现openlayers官网上的例子
+openlayers是GIS中非常重要的一个地图插件
