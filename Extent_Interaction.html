@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src='vue.js'></script>
+<link rel="stylesheet" href="openlayers/ol.css"/>
+<script type="text/javascript" src="openlayers/ol.js"></script>
+<style>
+     .map {
+        width: 100%;
+        height:550px;
+      }
+</style>
+<title>Clustered Features</title>
+</head>
+<body>
+<div id="app">
+    <div style="text-align: center;">{{Name}}</div>
+    <div id="map" class="map" tabindex="0"></div>
+    <form class="form-inline">
+        <label>Geometry type  </label>
+        <select id="type">
+          <option value="Point">Point</option>
+          <option value="LineString">LineString</option>
+          <option value="Polygon">Polygon</option>
+          <option value="Circle">Circle</option>
+        </select>
+      </form>
+</div>
+   <script>
+       //阻止vue在启动时生成出产提示。
+       Vue.config.productionTip=false
+       const app=new Vue({
+           el:'#app',
+           data:{
+               Name:'Clustered Features',
+               firstName:'张',
+               lastName:'三'
+             
+
+           },
+           methods:{
+               begin: function(){
+                   console.log('hello');
+               }
+              
+              
+           },
+           mounted(){
+               const map=new ol.Map({
+                   layers:[
+                       new ol.layer.Tile({
+                           source:new ol.source.OSM(),
+                       })
+                   ],
+                   target:'map',
+                   view: new ol.View({
+                       center:[0,0],
+                       zoom:2,
+                   }),
+               });
+               const extent=new ol.interaction.Extent({
+                   condition:ol.events.condition.shiftKeyOnly
+
+               });
+               map.addInteraction(extent);
+          
+    
+ 
+      
+ 
+ 
+    
+                
+               
+
+           }
+          
+
+       })    
+      
+   </script>
+</body>
+</html>
