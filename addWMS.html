@@ -1,0 +1,210 @@
+<!-- 加载WMS服务并添加图层控制 -->
+<!DOCTYPE html>
+<html>
+<head>
+<script src='vue.js'></script>
+<link rel="stylesheet" href="openlayers/ol.css"/>
+<script type="text/javascript" src="openlayers/ol.js"></script>
+<style>
+     /* .map {
+        width: 100%;
+        height:500px;
+      } */
+    body,
+    html,
+    div,
+    ul,
+    li {
+      border: none;
+      padding: 0;
+      margin: 0;
+      font-size: 14px;
+      font-family: 'Microsoft YaHei';
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+    }
+
+    .layerControl {
+      position: absolute;
+      bottom: 5px;
+      min-width: 200px;
+      max-height: 200px;
+      right: 0px;
+      top: 5px;
+      z-index: 100;
+      color: #ffffff;
+      background-color: #4c4e5a;
+      border-width: 10px;
+      border-radius: 10px;
+      border-color: #000 #000 #000 #000;
+    }
+
+    .layerControl .title {
+      font-weight: bold;
+      font-size: 15px;
+      margin: 10px;
+    }
+
+    .layerTree li {
+      list-style: none;
+      margin: 5px 10px;
+    }
+    .mouse-position-wrapper{
+    width:300px; 
+    height:29px; 
+    color:#FFFFFF; 
+    position:absolute; 
+    right:20px; 
+    bottom:6px; 
+    z-index:999;
+  }
+
+
+</style>
+<title>Accessibl_Map</title>
+</head>
+<body>
+<div id="app">
+    <div style="text-align: center;">{{Name}}</div>
+    <div id="map" class="map" tabindex="0">
+        <div  id="mouse-position" class="mouse-position-wrapper">
+            <div class="custom-mouse-position"></div>
+        </div>
+    </div>
+    <div id="layerControl" class="layerControl">
+        <div class="title"><label for="">地图列表</label></div>
+        <ul id="layerTree" class="layerTree"></ul>
+    </div>
+  
+</div>
+   <script>
+       //阻止vue在启动时生成出产提示。
+       Vue.config.productionTip=false
+       const app=new Vue({
+           el:'#app',
+           data:{
+               Name:'Accessibl_Map'
+        
+           },
+           methods:{
+               begin: function(){
+                   console.log('hello');
+               }
+              
+              
+           },
+           mounted(){
+
+
+
+
+               // 1.创建列表数组
+    var layer = new Array(); // map的图层数组
+    var layerName = new Array(); // 图层名数组
+    var layerVisibility = new Array(); // 可见图层数组
+
+    // 2.创建加载图层列表中的数据函数
+    function loadLayersControl(map, id) {
+      var treeContent = document.getElementById(id); //获取图层列表容器对象ul
+      var layers = map.getLayers(); // 获取地图中所以图层；
+      // 2.1 遍历layers，获取图层、名字、可见性，创建li列表
+      for (var i = 0; i < layers.getLength(); i++) { // getLength()获取图层个数
+        layer[i] = layers.item(i); // 获取集合中第i个图层，循环为layer数组赋值
+        layerName[i] = layer[i].get('name'); // 获取图层名字
+        layerVisibility[i] = layer[i].getVisible(); // 获取图层可见性，返回布尔值
+        var elementLi = document.createElement('li');  // 创建li子节点
+        treeContent.appendChild(elementLi); // 添加li子节点到ul
+        // 2.2 创建复选框
+        var elementInput = document.createElement('input');
+        elementInput.type = 'checkbox';
+        elementInput.name = 'layers' // name属性值一致才能实现复选
+        elementLi.appendChild(elementInput);
+        // 2.3 创建label元素
+        var elementLabel = document.createElement('label');
+        elementLabel.className = 'layer'; // 设置label类名，修改样式
+        // 2.3 设置图层名称
+        elementLabel.innerHTML = layerName[i]; // 把图层名添加到label
+        // 2.4 把label追加到li
+        elementLi.appendChild(elementLabel);
+        // 2.5 设置图层默认显示
+        if (layerVisibility[i]) {
+          elementInput.checked = true; // 如果图层可见，勾选复选框
+        };
+        // 2.6 为checkbox添加变更事件监听函数
+        addChangeEvent(elementInput, layer[i]);
+      }
+    };
+
+    // 3.为checkbox绑定点击事件
+    function addChangeEvent(element, layer) {
+      element.addEventListener('click', function () {
+        if (element.checked) {
+          layer.setVisible(true);
+        } else {
+          layer.setVisible(false);
+        }
+      });
+    }
+
+                //加载GeoJson格式的矢量数据
+                
+                var fullScreen = new ol.control.FullScreen({
+                    target: document.getElementById('mouse-position')
+                });
+                const map = new ol.Map({
+                    layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM(),
+                        name:'世界地图'
+                    }),
+                    new ol.layer.Image({
+                        source: new ol.source.ImageWMS({
+                            ratio:1,
+                            url:'http://localhost:8080/geoserver/test/wms',
+                            crossOrigin:'anonymous', //跨域声明
+                            params:{
+                                'FORMAT':'image/jpeg',
+                                'VERSION':'1.1.0',
+                                "exceptions":'application/vnd.ogc.se_inimage',
+                                "LAYERS":'test:GDBT'
+
+                            }
+                        }),
+                        name:'滑坡易发性评价图'
+                    })
+                
+                    ],
+                    target: 'map',
+                    view: new ol.View({
+                        
+                        center: ol.proj.fromLonLat([107.21, 28.05]),
+                        zoom: 8,   
+                        
+                    }),
+                    controls: ol.control.defaults().extend([fullScreen]),
+                    
+                });
+                map.on('click',function(e){
+                    console.log(e.coordinate);
+
+                });
+
+
+                // 5.加载图层列表中的数据
+                loadLayersControl(map, 'layerTree');
+                this.begin();
+                
+               
+
+           }
+          
+
+       })    
+      
+   </script>
+</body>
+</html>
