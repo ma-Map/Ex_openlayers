@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src='vue.js'></script>
+<link rel="stylesheet" href="openlayers/ol.css"/>
+<script type="text/javascript" src="openlayers/ol.js"></script>
+<style>
+     .map {
+        width: 100%;
+        height:500px;
+      }
+</style>
+<title>IGN WMTS</title>
+</head>
+<body>
+<div id="app">
+    <div style="text-align: center;">{{Name}}</div>
+    <div id="map" class="map" tabindex="0"></div>
+</div>
+   <script>
+       //阻止vue在启动时生成出产提示。
+       Vue.config.productionTip=false
+       const app=new Vue({
+           el:'#app',
+           data:{
+               Name:'IGN WMTS'
+        
+           },
+           methods:{
+               begin: function(){
+                   console.log('hello');
+               }
+              
+              
+           },
+           mounted(){
+                const map = new ol.Map({
+                target: 'map',
+                view: new ol.View({
+                    zoom: 5,
+                    center: ol.proj.fromLonLat([5, 45]),
+                }),
+                });
+               
+                const resolutions = [];
+                const matrixIds = [];
+                const proj3857 = ol.proj.get('EPSG:3857');
+                const maxResolution = ol.extent.getWidth(proj3857.getExtent()) / 256;
+               
+                for (let i = 0; i < 20; i++) {
+                matrixIds[i] = i.toString();
+                resolutions[i] = maxResolution / Math.pow(2, i);
+                }
+
+                const tileGrid = new ol.tilegrid.WMTS({
+                origin: [-20037508, 20037508],
+                resolutions: resolutions,
+                matrixIds: matrixIds,
+                });
+              
+                // For more information about the IGN API key see
+                // https://geoservices.ign.fr/blog/2021/01/29/Maj_Cles_Geoservices.html
+
+                const ign_source = new ol.source.WMTS({
+                url: 'https://wxs.ign.fr/choisirgeoportail/geoportail/wmts',
+                layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
+                matrixSet: 'PM',
+                format: 'image/png',
+                projection: 'EPSG:3857',
+                tileGrid: tileGrid,
+                style: 'normal',
+                attributions:
+                    '<a href="https://www.ign.fr/" target="_blank">' +
+                    '<img src="https://wxs.ign.fr/static/logos/IGN/IGN.gif" title="Institut national de l\'' +
+                    'information géographique et forestière" alt="IGN"></a>',
+                });
+
+                const ign = new ol.layer.Tile({
+                source: ign_source,
+                });
+
+                map.addLayer(ign);
+                this.begin();
+                
+               
+
+           }
+          
+
+       })    
+      
+   </script>
+</body>
+</html>
