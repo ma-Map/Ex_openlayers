@@ -1,0 +1,130 @@
+<!-- 绘制图形并输出图形坐标信息 -->
+<!DOCTYPE html>
+<html>
+<head>
+<script src='vue.js'></script>
+<link rel="stylesheet" href="openlayers/ol.css"/>
+<script type="text/javascript" src="openlayers/ol.js"></script>
+
+<style>
+     .map {
+        width: 100%;
+        height:500px;
+      }
+</style>
+<title>Animated GIF</title>
+</head>
+<body>
+<div id="app">
+    <div>{{Name}}</div>
+    <button @click="startDraw()">开始绘制</button>
+    <button @click="outcoodinate()">导出坐标</button>
+    <div id="map" class="map"></div>
+
+
+
+   
+    
+</div>
+   <script>
+       //阻止vue在启动时生成出产提示。
+       Vue.config.productionTip=false
+       
+       const app=new Vue({
+           el:'#app',
+           data:{
+               Name:'Animated GIF',
+               coorhinate:'',
+               vectorlayer: {},
+               vectorSource: {},
+               map:{},
+             
+           },
+           methods:{
+               initial(){
+                   console.log("hello")
+               },
+               initMap() {
+
+                         this.vectorlayer = new ol.layer.Vector({
+                             source: new ol.source.Vector(),
+                         });
+                    
+                    
+        
+                        this.map = new ol.Map({
+                            target: "map",
+                    
+                            layers: [
+                            this.vectorlayer,
+                            
+                            // new ol.layer.Tile({
+                            //     source: new ol.source.OSM(),
+                            // }),
+                            
+                            ],
+                            view: new ol.View({
+                            projection: "EPSG:4326",
+                            center: [107, 28],
+                            zoom: 7,
+                            }),
+                        });
+        
+                },
+               startDraw() {
+                    
+                   
+                    // 绘制;
+                    this.draw = new ol.interaction.Draw({
+                        type: "Polygon", // 设定为多边形
+                        source: this.vectorlayer.getSource(),
+                    });
+                    this.map.addInteraction(this.draw);
+                    this.draw.on("drawend", (e) => {
+                        this.featureDraw = e.feature;
+                    });
+                },
+               outcoodinate(){
+                   console.log('1')
+                   const count=this.map.getLayers()
+                   console.log(count)
+                   console.log(this.draw.$v[0][0])
+                   console.log(count.item(0))
+                }
+
+               
+              
+              
+           },
+           mounted(){
+               console.log('2')
+                // this.vectorlayer=new ol.layer.Vector({
+                //     source:this.vectorSource
+
+                // });
+                console.log('1')
+                this.initial();
+                this.initMap();
+
+
+            
+
+
+
+
+
+
+
+
+                
+                
+               
+
+           }
+          
+
+       })    
+      
+   </script>
+</body>
+</html>
