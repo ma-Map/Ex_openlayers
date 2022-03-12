@@ -1,0 +1,296 @@
+<!-- 以安顺市行政区划图为地图 实现添加文字标注和点击查看各地区滑坡数据的功能 -->
+<!DOCTYPE html>
+<html>
+<head>
+<script src='vue.js'></script>
+<link rel="stylesheet" href="openlayers/ol.css"/>
+<script type="text/javascript" src="openlayers/ol.js"></script>
+<style>
+     .map {
+        width: 100%;
+        height:500px;
+      }
+
+      .ol-popup {
+        position: absolute;
+        background-color: white;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #cccccc;
+        bottom: 12px;
+        left: -50px;
+        min-width: 280px;
+      }
+      .ol-popup:after, .ol-popup:before {
+        top: 100%;
+        border: solid transparent;
+        content: " ";
+        height: 0;
+        width: 0;
+        position: absolute;
+        pointer-events: none;
+      }
+      .ol-popup:after {
+        border-top-color: white;
+        border-width: 10px;
+        left: 48px;
+        margin-left: -10px;
+      }
+      .ol-popup:before {
+        border-top-color: #cccccc;
+        border-width: 11px;
+        left: 48px;
+        margin-left: -11px;
+      }
+      .ol-popup-closer {
+        text-decoration: none;
+        position: absolute;
+        top: 2px;
+        right: 8px;
+      }
+      .ol-popup-closer:after {
+        content: "✖";
+      }
+</style>
+<title>安顺市滑坡情况</title>
+</head>
+<body>
+<div id="app">
+    <div style="text-align: center;">{{Name}}</div>
+    <div id="map" class="map"></div>
+    <div id="info">No countries selected</div>
+    <div id="popup" class="ol-popup">
+        <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+        <div id="popup-content"></div>
+    </div>
+
+    
+</div>
+   <script>
+       //阻止vue在启动时生成出产提示。
+       Vue.config.productionTip=false
+       const app=new Vue({
+           el:'#app',
+           data:{
+               Name:'安顺市滑坡灾害信息系统',
+               info:''
+        
+           },
+           methods:{
+               begin: function(){
+                   console.log('hello');
+               }
+              
+              
+           },
+           mounted(){
+        
+            var gaodeMapLayer = new ol.layer.Tile({
+                source: new ol.source.XYZ({
+                    url: 'http://wprd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&style=7&x={x}&y={y}&z={z}'
+                })
+            });
+ 
+            
+
+
+            var vectorSource = new ol.source.Vector({
+                url: 'anshun_info.geojson',
+                format: new ol.format.GeoJSON()
+            });
+            
+            // var style = new ol.style.Style({
+            //     
+                
+                
+            // });
+
+            var vectorLayer = new ol.layer.Vector({
+                source: vectorSource
+            });
+
+
+
+            //弹出框提示
+                /**
+            * Elements that make up the popup.
+            */
+            const container = document.getElementById('popup');
+            const content = document.getElementById('popup-content');
+            const closer = document.getElementById('popup-closer');
+
+
+                /**
+            * Create an overlay to anchor the popup to the map.
+            */
+            const overlay = new ol.Overlay({
+            element: container,
+            autoPan: {
+                animation: {
+                duration: 250,
+                },
+            },
+            });
+
+            /**
+            * Add a click handler to hide the popup.
+            * @return {boolean} Don't follow the href.
+            */
+            closer.onclick = function () {
+            overlay.setPosition(undefined);
+            closer.blur();
+            return false;
+            };
+
+ 
+      var map = new ol.Map({
+        layers: [
+          gaodeMapLayer,
+          vectorLayer
+         ],
+        overlays: [overlay],
+        target: 'map',
+        view: new ol.View({
+          center: ol.proj.fromLonLat([106.5, 25.8]),
+          zoom: 8
+        })
+      });
+
+      vectorLayer.setStyle(styleFunc);
+ 
+      //创建选择交互控件
+      var select = new ol.interaction.Select();
+      map.addInteraction(select);
+ 
+      //获取所有选择的要素
+      var selectedFeatures = select.getFeatures();
+ 
+      //创建DragBox交互控件
+      var dragBox = new ol.interaction.DragBox({
+         //ol.events.condition.platformModifierKeyOnly
+         //Return true if only the platform-modifier-key (the meta-key on Mac, ctrl-key otherwise) is pressed,
+         //如果只按下platform-modifier-key（Mac平台是meta-key，其他平台是ctrl-key）则返回true
+         //false otherwise
+         //其他都返回false
+        condition: ol.events.condition.platformModifierKeyOnly
+      });
+ 
+      map.addInteraction(dragBox);
+ 
+      dragBox.on('boxend', function() {
+        //获取当前绘制的范围
+        var extent = dragBox.getGeometry().getExtent();
+        //遍历当前范围内的每一个要素，并把它添加到selectedFeatures集合中
+       vectorSource.forEachFeatureIntersectingExtent(extent, function(feature) {
+          selectedFeatures.push(feature);
+        });
+      });
+ 
+      //每次绘制之前清除selectedFeatures中的所有要素
+      dragBox.on('boxstart', function() {
+        selectedFeatures.clear();
+      });
+ 
+      var infoBox = document.getElementById('info');
+ 
+    //    selectedFeatures.on(['add', 'remove'], function() {
+    //     //遍历selectedFeatures中的每一个要素，并返回每一个要素的名称
+    //    var names = selectedFeatures.getArray().map(function(feature) {
+    //           this.info=feature.get('NAME')
+    //           console.log(this.info)
+    //       return feature.get('NAME');
+    //     });
+    //     //如果names数组的长度大于0，则把它用逗号分隔添加到id为info的DIV标签中
+    //    if (names.length > 0) {
+    //       infoBox.innerHTML = names.join(', ');
+    //     } else {
+    //       infoBox.innerHTML = 'No countries selected';
+    //     }
+    // });
+        
+
+
+    //添加图层标识
+    function styleFunc(feature){
+        var style = new ol.style.Style({
+
+            fill: new ol.style.Fill({ //矢量图层填充颜色，以及透明度
+                    color: 'rgba(255, 255, 255, 0.6)'
+                }),
+            stroke: new ol.style.Stroke({ //边界样式
+                    color: '#319FD3',
+                    width: 1
+                }),
+            image: new ol.style.Circle({
+                radius: 10,
+                fill: new ol.style.Fill({
+                    color: '#ffff00',
+                }),
+                stroke: new ol.style.Stroke({
+                    color: '#fff',
+                    width: 1
+                })
+            }),
+            text: new ol.style.Text({
+                font: '10px serif',
+                text: feature.get('NAME').toString(),
+                fill: new ol.style.Fill({
+                    color: '#000'
+                })
+            })
+        });
+        return style;
+    }
+
+
+
+    
+/**
+ * Add a click handler to the map to render the popup.
+ */
+ map.on('singleclick', function (evt) {
+  const coordinate = evt.coordinate;
+  const hdms = ol.coordinate.toStringHDMS(ol.proj.fromLonLat(coordinate));
+
+  selectedFeatures.on(['add', 'remove'], function() {
+        //遍历selectedFeatures中的每一个要素，并返回每一个要素的名称
+       var names = selectedFeatures.getArray().map(function(feature) {
+              
+
+              content.innerHTML = '<p>You clicked here:</p><code>' +'地区：'+ feature.get('NAME') + '<br>'+'滑坡数量:'+feature.get('Join_Count')+'</code>';
+              overlay.setPosition(coordinate);
+          return feature.get('NAME');
+        });
+        //如果names数组的长度大于0，则把它用逗号分隔添加到id为info的DIV标签中
+       if (names.length > 0) {
+          infoBox.innerHTML = names.join(', ');
+        } else {
+          infoBox.innerHTML = 'No countries selected';
+        }
+    });
+  
+  
+});
+
+
+
+
+            
+    
+
+
+            
+
+
+                
+               
+
+           }
+          
+
+       })    
+      
+   </script>
+</body>
+</html>
