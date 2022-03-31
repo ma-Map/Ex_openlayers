@@ -1,0 +1,114 @@
+<!-- 实现视图的转换 -->
+<!DOCTYPE html>
+<html>
+<head>
+<script src='vue.js'></script>
+<link rel="stylesheet" href="openlayers/ol.css"/>
+<script type="text/javascript" src="openlayers/ol.js"></script>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<style>
+     .map {
+        width: 100%;
+        height:500px;
+      }
+</style>
+<title>Accessibl_Map</title>
+</head>
+<body>
+<div id="app">
+    <div id="map" class="map"></div>
+    <button id="btn1" @click="btn1">合肥</button>
+    <button id="btn2" @click="btn2">上海</button>
+    <button id="btn3" @click="btn3">北京</button>
+    <button id="btn4" @click="btn4">深圳</button>
+   
+   
+    
+</div>
+   <script>
+       //阻止vue在启动时生成出产提示。
+       Vue.config.productionTip=false
+       const app=new Vue({
+           el:'#app',
+           data:{
+               Name:'Accessibl_Map',
+               radio:'1',
+               map:''
+        
+           },
+           methods:{
+               nq:function() {
+                   console.log(this.radio)
+               },
+               btn1:function(){
+                   console.log('合肥');
+                   const center=ol.proj.transform([117.2203174126746, 31.802688417208742],'EPSG:4326','EPSG:3857');
+                   var view=this.map.getView();
+                   view.setCenter(center);
+
+               },
+               btn2:function(){
+                   console.log('上海')
+                   const center=ol.proj.transform([121.5025,31.237015],'EPSG:4326','EPSG:3857');
+                   var view=this.map.getView();
+                   view.setCenter(center);
+
+
+               },
+               btn3:function(){
+                   console.log('北京')
+                  
+                   const center=ol.proj.transform([ 116.3891271929685, 39.91110434796056],'EPSG:4326','EPSG:3857');
+                   var view=this.map.getView();
+                   view.setCenter(center);
+
+               },
+               btn4:function(){
+                   console.log('深圳');
+                   const center=ol.proj.transform([114.03750033398845, 22.52763675567833],'EPSG:4326','EPSG:3857');
+                   var view=this.map.getView();
+                   view.setCenter(center);
+
+               },
+              
+               
+              
+              
+           },
+           mounted(){
+               this.map=new ol.Map({
+                   
+                   target:'map',
+                   view:new ol.View({
+                       center:ol.proj.transform([121.5025,31.237015], 'EPSG:4326','EPSG:3857'),
+                       zoom:8,
+                       projection: 'EPSG:3857'
+                   })
+               });
+               const layer1=new ol.layer.Tile({
+                   source:new ol.source.OSM()
+               })
+               this.map.addLayer(layer1)
+               this.map.on('singleclick',function(e){
+                   console.log(e.pixel)
+                   console.log(e.coordinate)
+                   console.log(ol.proj.transform(e.coordinate, 'EPSG:3857', 'EPSG:4326'));
+                   //    返回度分秒坐标
+                   const hdms = ol.coordinate.toStringHDMS(ol.proj.toLonLat(e.coordinate))
+                   
+                   console.log(hdms)
+               })
+               
+                
+
+           }
+          
+
+       })    
+      
+   </script>
+</body>
+</html>
